@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel Caja</title>
+  <link rel="stylesheet" href="css/styles.css">
+
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    integrity="sha512-T2rUxxzq1mTQbA7g8P+4CqXj6xC9V3qzQ8z4Z+7A5s4xM1kq4P3fqH6cDZP8xV6yqgUGTAdW3X3K0gO5mvmT7Q=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+</head>
+<body>
+  <div id="auth-container">
+    <div class="login-container">
+    <h2>Iniciar Sesión</h2>
+    <form id="auth-form">
+      <label>Email</label>
+      <input type="email" id="email-input" required>
+      <label>Contraseña</label>
+      <input type="password" id="password-input" required>
+      <button type="submit" id="signin-btn">Iniciar Sesión</button>
+    </form>
+    </div>
+  </div>
+
+  <div id="app-container" style="display: none;">
+    <nav>
+      <button class="nav-btn active" data-view="products"><i class="fa-solid fa-box"></i> Productos</button>
+      <button class="nav-btn" data-view="orders"><i class="fa-solid fa-receipt"></i> Pedidos <span id="order-count-badge" class="badge hidden">0</span></button>
+      <button id="logout-btn"><i class="fa-solid fa-sign-out-alt"></i> Cerrar Sesión</button>
+    </nav>
+
+    <div id="products-view" class="view active">
+      <h2><i class="fa-solid fa-boxes-stacked"></i> Productos</h2>
+      <div class="filters">
+          <label>Stock:</label>
+          <select id="product-stock-filter">
+              <option value="">Todos</option>
+              <option value="in_stock">En Stock</option>
+              <option value="out_of_stock">Sin Stock</option>
+          </select>
+          <input type="text" id="product-search" placeholder="Buscar producto...">
+      </div>
+      <button id="addProductBtn"><i class="fa-solid fa-plus"></i> Agregar Producto</button>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Imagen</th>
+            <th>Nombre</th>
+            <th>Categoría</th>
+            <th>Precio</th>
+            <th>Stock</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="products-table-body"></tbody>
+      </table>
+    </div>
+
+    <div id="orders-view" class="view">
+      <h2><i class="fa-solid fa-receipt"></i> Pedidos</h2>
+      <button id="refreshOrdersBtn"><i class="fa-solid fa-rotate"></i> Recargar</button>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Cliente</th>
+            <th>Dirección</th>
+            <th>Total</th>
+            <th>Estado de Pago</th>
+            <th>Fecha</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="orders-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="product-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn">&times;</span>
+      <h3><i class="fa-solid fa-box-open"></i> Producto</h3>
+      <form id="product-form">
+        <input type="hidden" id="product-id">
+        <label>Nombre</label>
+        <input type="text" id="product-name" required>
+        <label>Descripción</label>
+        <textarea id="product-description"></textarea>
+        <label>Categoría</label>
+        <input type="text" id="product-category" required>
+        <label>Precio</label>
+        <input type="number" id="product-price" required>
+        <label>Stock</label>
+        <input type="number" id="product-stock" required>
+        <label><input type="checkbox" id="product-featured"> Destacado</label>
+        <label><input type="checkbox" id="product-isOffer"> Oferta</label>
+        <label><input type="checkbox" id="product-bestSeller"> Más vendido</label>
+        <label>Imagen</label>
+        <input type="file" id="product-image" accept="image/*">
+        <input type="hidden" id="current-image-url">
+        <img id="image-preview" style="max-width:100px;display:none;">
+        <button type="submit"><i class="fa-solid fa-save"></i> Guardar</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="order-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn">&times;</span>
+      <h3><i class="fa-solid fa-receipt"></i> Detalle Pedido</h3>
+      <div id="order-details"></div>
+      <button id="printInvoiceBtn"><i class="fa-solid fa-print"></i> Imprimir Pedido</button>
+    </div>
+  </div>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>

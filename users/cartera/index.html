@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Panel Contable</title>
+    <link rel="stylesheet" href="css/styles.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-T2rUxxzq1mTQbA7g8P+4CqXj6xC9V3qzQ8z4Z+7A5s4xM1kq4P3fqH6cDZP8xV6yqgUGTAdW3X3K0gO5mvmT7Q==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <script src="https://unpkg.com/@supabase/supabase-js"></script>
+</head>
+
+<body>
+    <nav>
+        <button class="nav-btn active" data-view="accounting"><i class="fa-solid fa-calculator"></i> Contabilidad</button>
+    </nav>
+
+    <div id="accounting-view" class="view active">
+        <h2><i class="fa-solid fa-calculator"></i> Contabilidad</h2>
+
+        <div class="filter-controls">
+            <label>Filtrar</label>
+            <select id="accounting-status">
+                <option value="">Estado de pago</option>
+                <option value="Confirmado">Confirmado</option>
+                <option value="Rechazado">Rechazado</option>
+            </select>
+            <select id="accounting-payment">
+                <option value="">Método de Pago</option>
+                <option value="Efectivo">Efectivo</option>
+                <option value="Transferencia">Transferencia</option>
+            </select>
+            <label for="accounting-start">Desde:</label>
+            <input type="date" id="accounting-start">
+            <label for="accounting-end">Hasta:</label>
+            <input type="date" id="accounting-end">
+            <label for="accounting-min">Total Mín:</label>
+            <input type="number" id="accounting-min" placeholder="0">
+            <label for="accounting-max">Total Máx:</label>
+            <input type="number" id="accounting-max" placeholder="0">
+        </div>
+
+        <div class="accounting-summary">
+            <h3>Total venta confirmados: <span id="confirmed-total-display"></span></h3>
+        </div>
+
+        <div class="controls-container">
+            <button class="btn btn-primary" id="exportAccountingBtn"><i class="fa-solid fa-file-export"></i> Exportar CSV</button>
+            <button class="btn btn-primary" id="refreshOrdersBtn"><i class="fa-solid fa-rotate"></i> Recargar</button>
+        </div>
+
+        <div class="table-container">
+            <table id="accounting-table">
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Fecha</th>
+                        <th>Método de Pago</th>
+                        <th>Total Venta</th>
+                        <th>Estado de Pago</th>
+                    </tr>
+                </thead>
+                <tbody id="accounting-table-body">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="js/admin.js"></script>
+</body>
+
+</html>
