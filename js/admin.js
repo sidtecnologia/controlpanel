@@ -1,11 +1,10 @@
-
-        // --- CONFIGURACIÓN DE SUPABASE ---
+// --- CONFIGURACIÓN DE SUPABASE ---
         const SUPABASE_URL = "https://nqjekbyyvqrevbcehhob.supabase.co"; // ¡Reemplaza con tu URL!
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xamVrYnl5dnFyZXZiY2VoaG9iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg0MzE4MTEsImV4cCI6MjA3NDAwNzgxMX0.U-zb7wcX3qYeAoRH3MM2FVj9ZZzODsdvjj9wNWg_h74";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xamVrYnl5dnFyZXZiY2VoaG9iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg0MzE4MTEsImV4cCI6MjA3NDAwNzgxMX0.U-zb7wcX3qYeAoRH3MM2FVj9ZZzODsdvjj9wNWg_h74"; 
+         
         const BASE_API_URL = `${SUPABASE_URL}/rest/v1`;
         const AUTH_API_URL = `${SUPABASE_URL}/auth/v1`;
-        // Nombre del Bucket de Storage (Asume que existe uno llamado 'products')
-        const STORAGE_BUCKET = "products";
+        const STORAGE_BUCKET = "images";
         const STORAGE_API_URL = `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}`;
 
         // --- ESTADO GLOBAL ---
@@ -14,8 +13,11 @@
         let authToken = null;
         let productsData = []; 
         let carteraData = []; 
-        let fileToUpload = null; // Archivo seleccionado para subir
         
+        // Variables de estado para el modal de productos
+        let fileToUpload = null; 
+        let currentProduct = null; // Almacena el producto que se está editando
+
         const DEFAULT_IMG_URL = "https://placehold.co/40x40/cccccc/000000?text=IMG";
 
         // --- FUNCIONES DE UTILIDAD ---
@@ -27,7 +29,6 @@
             }
         };
 
-        // Se elimina la función showError ya que no debe haber alertas
         const logError = (message) => {
             const errorElement = document.getElementById('login-error');
             errorElement.textContent = message;
@@ -302,12 +303,16 @@
             }
         };
 
+        // --- INICIO DEL BLOQUE DE CÓDIGO DE PRODUCTOS (CORREGIDO) ---
+
         const showProductModal = (product) => {
-            fileToUpload = null; // Reiniciar archivo
-            const isNew = !product;
-            document.getElementById('modal-title').textContent = isNew ? 'Añadir Nuevo Producto' : `Editar Producto: ${product.name}`;
+            currentProduct = product; 
+            fileToUpload = null; 
             
-            const currentImageUrl = (Array.isArray(product?.image) && product.image.length > 0) ? product.image[0] : '';
+            const isNew = !product;
+            document.getElementById('modal-title').textContent = isNew ? 'Añadir Nuevo Producto' : `Editar Producto: ${product?.name || ''}`;
+            
+            const currentImageUrl = (Array.isArray(product?.image) && product.image.length > 0) ? product.image[0] : DEFAULT_IMG_URL;
 
             document.getElementById('modal-body').innerHTML = `
                 <div class="space-y-4">
@@ -319,132 +324,156 @@
                     
                     <div class="pt-2 border-t">
                         <span class="text-gray-700 font-medium">Imagen del Producto:</span>
-                        <p class="text-xs text-gray-500 mb-2" id="current-image-status">URL Actual: ${currentImageUrl || 'N/A'}</p>
-                        <div class="flex items-center gap-3">
-                            <input type="file" id="image-upload-input" accept="image/*" class="hidden">
-                            <button id="select-image-btn" class="px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600">Examinar</button>
-                            <span id="selected-file-name" class="text-sm text-gray-600">Ningún archivo seleccionado.</span>
+                        <div class="flex items-center gap-4 mt-2">
+                             <img src="${currentImageUrl}" alt="Imagen actual" id="image-preview" class="w-12 h-12 object-cover rounded-md">
+                             <div>
+                                <input type="file" id="image-upload-input" accept="image/*" class="hidden">
+                                <button type="button" id="select-image-btn" class="px-3 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 text-sm">Cambiar Imagen</button>
+                                <p id="selected-file-name" class="text-xs text-gray-600 mt-1">Ningún archivo nuevo seleccionado.</p>
+                             </div>
                         </div>
                     </div>
 
-                    <div class="flex flex-wrap gap-4 pt-2 border-t">
-                        <label class="flex items-center">
-                            <input type="checkbox" id="modal-featured" ${product?.featured ? 'checked' : ''} class="mr-2 rounded border-gray-300 text-indigo-600 shadow-sm">
-                            <span class="text-gray-700 font-medium">Destacado</span>
-                        </label>
-                        <label class="flex items-center">
-                            <input type="checkbox" id="modal-isOffer" ${product?.isOffer ? 'checked' : ''} class="mr-2 rounded border-gray-300 text-indigo-600 shadow-sm">
-                            <span class="text-gray-700 font-medium">En Oferta</span>
-                        </label>
-                        <label class="flex items-center">
-                            <input type="checkbox" id="modal-bestSeller" ${product?.bestSeller ? 'checked' : ''} class="mr-2 rounded border-gray-300 text-indigo-600 shadow-sm">
-                            <span class="text-gray-700 font-medium">Más Vendido</span>
-                        </label>
+                    <div class="flex flex-wrap gap-4 pt-4 border-t">
+                        <label class="flex items-center"><input type="checkbox" id="modal-featured" ${product?.featured ? 'checked' : ''} class="mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600"><span class="text-gray-700">Destacado</span></label>
+                        <label class="flex items-center"><input type="checkbox" id="modal-isOffer" ${product?.isOffer ? 'checked' : ''} class="mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600"><span class="text-gray-700">En Oferta</span></label>
+                        <label class="flex items-center"><input type="checkbox" id="modal-bestSeller" ${product?.bestSeller ? 'checked' : ''} class="mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600"><span class="text-gray-700">Más Vendido</span></label>
                     </div>
                 </div>
             `;
             document.getElementById('modal-actions').innerHTML = `
-                <button id="save-product-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-150">Guardar</button>
+                <button id="save-product-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-150">Guardar Cambios</button>
             `;
             
-            // Event Listeners para la subida de imagen
             document.getElementById('select-image-btn').onclick = () => document.getElementById('image-upload-input').click();
+            
             document.getElementById('image-upload-input').onchange = (e) => {
-                fileToUpload = e.target.files[0];
-                document.getElementById('selected-file-name').textContent = fileToUpload ? fileToUpload.name : 'Ningún archivo seleccionado.';
+                const file = e.target.files[0];
+                if (file) {
+                    fileToUpload = file;
+                    document.getElementById('selected-file-name').textContent = file.name;
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        document.getElementById('image-preview').src = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
             };
-
-            document.getElementById('save-product-btn').onclick = () => saveProduct(isNew, product?.id, currentImageUrl);
+            
+            document.getElementById('save-product-btn').onclick = saveProduct;
+            
             setView('modal', true);
         };
 
-        // Simulación de subida de imagen a Supabase Storage
-        const uploadImage = async (file, id) => {
+        const uploadImage = async (file, category) => {
             if (!file) return null;
 
-            const fileExt = file.name.split('.').pop();
-            const filePath = `${id}-${Date.now()}.${fileExt}`;
-            
+            // Lógica adaptada para el nombre del archivo: categoria/timestamp-nombrearchivo
+            const safeCategory = (category || 'misc').toLowerCase().replace(/\s+/g, '-');
+            const filePath = `${safeCategory}/${Date.now()}-${file.name}`;
+
             try {
                 const response = await fetch(`${SUPABASE_URL}/storage/v1/object/${STORAGE_BUCKET}/${filePath}`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${authToken}`,
                         'apikey': SUPABASE_ANON_KEY,
-                        'Content-Type': file.type || 'image/jpeg',
-                        'x-upsert': 'true'
+                        'Content-Type': file.type,
+                        'x-upsert': 'false' // Se usa 'false' como en el ejemplo
                     },
                     body: file
                 });
 
                 if (!response.ok) {
                     const error = await response.json();
-                    throw new Error(error.error || "Fallo en la subida de imagen (Verifica las políticas de Storage).");
+                    throw new Error(error.message || `Error ${response.status} al subir la imagen.`);
                 }
-
-                // URL pública del archivo
+                
                 return `${STORAGE_API_URL}/${filePath}`;
 
-            } catch (e) {
-                console.error("Error de subida:", e.message);
-                throw new Error("Error al subir la imagen. Revisa el Bucket y las políticas de Storage.");
+            } catch (error) {
+                console.error("Error en la subida de imagen:", error);
+                throw error; 
             }
         };
 
-        const saveProduct = async (isNew, id, oldImageUrl) => {
-            let imageUrl = oldImageUrl;
+        const saveProduct = async () => {
+            const isNew = !currentProduct;
+            const name = document.getElementById('modal-name').value;
+            const price = parseFloat(document.getElementById('modal-price').value);
+            const stock = parseInt(document.getElementById('modal-stock').value);
 
-            // 1. Subir la nueva imagen si existe
-            if (fileToUpload) {
-                try {
-                    // Usamos un ID temporal o el ID existente para el path del archivo
-                    const tempId = id || crypto.randomUUID();
-                    imageUrl = await uploadImage(fileToUpload, tempId);
-                    if (!id) id = tempId;
-                } catch (e) {
-                    return logError(e.message);
-                }
+            if (!name || isNaN(price) || isNaN(stock)) {
+                logError("Nombre, Precio y Stock son campos obligatorios y deben ser números válidos.");
+                return;
             }
 
-            // 2. Preparar datos para la base de datos
-            const data = {
-                name: document.getElementById('modal-name').value,
-                description: document.getElementById('modal-description').value,
-                category: document.getElementById('modal-category').value,
-                price: parseInt(document.getElementById('modal-price').value),
-                stock: parseInt(document.getElementById('modal-stock').value),
-                isOffer: document.getElementById('modal-isOffer').checked,
-                featured: document.getElementById('modal-featured').checked,
-                bestSeller: document.getElementById('modal-bestSeller').checked,
-                image: imageUrl ? [imageUrl] : [] 
-            };
-            
-            if (!data.name || isNaN(data.price) || isNaN(data.stock)) {
-                return logError("Faltan campos obligatorios o los números son inválidos.");
-            }
+            const button = document.getElementById('save-product-btn');
+            button.disabled = true;
+            button.textContent = 'Guardando...';
 
-            // 3. Guardar en la tabla products
             try {
-                if (isNew) {
-                    await makeRequest(`${BASE_API_URL}/products`, { 
-                        method: 'POST', 
-                        body: JSON.stringify({...data, id: id})
-                    });
-                    console.log('Producto creado con éxito.');
-                } else {
-                    await makeRequest(`${BASE_API_URL}/products?id=eq.${id}`, { 
-                        method: 'PATCH', 
-                        body: JSON.stringify(data) 
-                    });
-                    console.log('Producto actualizado con éxito.');
+                let imageUrl = (Array.isArray(currentProduct?.image) && currentProduct.image.length > 0) ? currentProduct.image[0] : null;
+                const category = document.getElementById('modal-category').value;
+                
+                // Lógica de subida adaptada
+                if (fileToUpload) {
+                    const uploadedUrl = await uploadImage(fileToUpload, category);
+                    if (uploadedUrl) {
+                        imageUrl = uploadedUrl;
+                    } else {
+                        throw new Error("La subida de la imagen falló, no se guardó el producto.");
+                    }
                 }
+
+                const productData = {
+                    name: name,
+                    description: document.getElementById('modal-description').value,
+                    category: category,
+                    price: price,
+                    stock: stock,
+                    isOffer: document.getElementById('modal-isOffer').checked,
+                    featured: document.getElementById('modal-featured').checked,
+                    bestSeller: document.getElementById('modal-bestSeller').checked,
+                    image: imageUrl ? [imageUrl] : []
+                };
+
+                let url;
+                let options;
+
+                if (isNew) {
+                    productData.id = crypto.randomUUID(); // Se mantiene el UUID para productos nuevos
+                    url = `${BASE_API_URL}/products`;
+                    options = {
+                        method: 'POST',
+                        headers: { 'Prefer': 'return=minimal' },
+                        body: JSON.stringify(productData)
+                    };
+                } else {
+                    url = `${BASE_API_URL}/products?id=eq.${currentProduct.id}`;
+                    options = {
+                        method: 'PATCH',
+                        headers: { 'Prefer': 'return=minimal' },
+                        body: JSON.stringify(productData)
+                    };
+                }
+
+                await makeRequest(url, options);
+
                 setView('modal', false);
-                loadProducts();
-            } catch (e) {
-                console.error(`Error al guardar producto: ${e.message}`);
-                logError(`Error al guardar producto.`);
+                await loadProducts();
+
+            } catch (error) {
+                console.error(`Error al guardar el producto: ${error.message}`);
+                logError(`No se pudo guardar el producto. ${error.message}`);
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Guardar Cambios';
             }
         };
+
+        // --- FIN DEL BLOQUE DE CÓDIGO DE PRODUCTOS ---
+
 
         // --- GESTIÓN DE ÓRDENES EN CAJA (orders) ---
 
@@ -503,7 +532,6 @@
                     const id = button.getAttribute('data-id');
                     const action = button.getAttribute('data-action');
                     
-                    // Se obtiene la orden al inicio para reutilizar en todas las acciones
                     const [order] = await makeRequest(`${BASE_API_URL}/orders?id=eq.${id}&select=*`);
                     
                     if (!order) {
@@ -515,7 +543,7 @@
 
                     if (action === 'view') {
                         showOrderDetailModal(order);
-                        return; // No se recarga la lista al solo ver el detalle
+                        return;
                     }
 
                     if (action === 'confirm') {
@@ -525,18 +553,21 @@
                         await rejectOrder(id);
                     }
                     
-                    loadOrdersCaja(); // Recargar solo si se confirma o rechaza
+                    loadOrdersCaja(); 
                 };
             });
         };
         
-        // Nueva función para actualizar stock
         const updateProductStock = async (items, operation) => {
             for (const item of items) {
-                const quantity = item.quantity || 1;
+                const quantity = item.qty || item.quantity; 
                 const productId = item.id;
                 
-                // Obtener el stock actual del producto
+                if (!productId || typeof quantity !== 'number' || quantity <= 0) {
+                    console.warn(`Ítem de orden incompleto o sin cantidad válida para stock. ID: ${productId}, Cantidad: ${quantity}`);
+                    continue; 
+                }
+
                 const [product] = await makeRequest(`${BASE_API_URL}/products?id=eq.${productId}&select=stock`);
                 if (!product) {
                     console.warn(`Producto ${productId} no encontrado, stock no actualizado.`);
@@ -566,7 +597,6 @@
         };
 
 
-        // Función de confirmación modificada para usar el trigger
         const confirmOrder = async (orderId) => {
             try {
                 const updateData = {
@@ -687,7 +717,7 @@
             let subtotalItemsPrice = 0;
 
             let itemsHtml = order.order_items.map(item => {
-                const itemQuantity = item.quantity || 1; 
+                const itemQuantity = item.qty || item.quantity || 0; 
                 const itemPrice = item.price || 0;
                 const itemTotal = itemPrice * itemQuantity;
                 totalItemsCount += itemQuantity;
@@ -703,13 +733,15 @@
                 `;
             }).join('');
             
-            const finalTotal = order.total_amount || subtotalItemsPrice;
+            const finalTotal = order.total_amount || subtotalItemsPrice; 
 
 
             document.getElementById('modal-body').innerHTML = `
                 <div class="space-y-2">
                     <p><span class="font-semibold">Cliente:</span> ${order.customer_name}</p>
                     <p><span class="font-semibold">Dirección:</span> ${order.customer_address}</p>
+                    <p class="p-2 bg-blue-50 border-l-4 border-blue-400"><span class="font-bold text-blue-800">Método de Pago:</span> ${order.payment_method}</p>
+                </div>
                 
                 <h4 class="font-bold mt-4 mb-2 text-lg border-b">Productos: Total ${totalItemsCount} ítems</h4>
                 <ul class="list-none pl-0 mb-4">${itemsHtml}</ul>
@@ -731,7 +763,7 @@
         const printOrder = (order) => {
             const printArea = document.getElementById('print-area');
             let itemsText = order.order_items.map(item =>
-                `<div>(${item.quantity || 1}x) ${item.name} -> $${(item.price || 0) * (item.quantity || 1)}</div>`
+                `<div>(${item.qty || item.quantity || 0}x) ${item.name} -> $${(item.price || 0) * (item.qty || item.quantity || 0)}</div>`
             ).join('');
 
             printArea.innerHTML = `
@@ -740,7 +772,6 @@
                 <div>Orden ID: ${order.id.substring(0, 8)}</div>
                 <div>Fecha: ${new Date(order.created_at).toLocaleString()}</div>
                 <div>Cliente: ${order.customer_name}</div>
-                <div>Pago: ${order.payment_method}</div>
                 <div>--------------------------------</div>
                 <div class="font-bold">DETALLE:</div>
                 ${itemsText}
@@ -863,7 +894,7 @@
             document.getElementById('close-modal').onclick = () => setView('modal', false);
 
             if (localStorage.getItem('authToken')) {
-                handleLogout();
+                handleLogout(); 
             } else {
                 setView('login-view', true);
             }

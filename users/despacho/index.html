@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control | Despacho</title>
+  <link rel="stylesheet" href="../../css/styles.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <div id="app-container" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+
+        <header id="header-nav" class="mb-8 p-4 bg-white shadow-lg rounded-xl flex justify-between items-center" style="display: none;">
+            <h1 class="text-3xl font-extrabold text-blue-800">Autoservicio La Quinta</h1>
+            <div>
+                <span id="user-info" class="text-gray-600 mr-4 font-medium"></span>
+                <button id="logout-button" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-150 shadow-md">Salir</button>
+            </div>
+        </header>
+
+        <div id="login-view" class="flex items-center justify-center min-h-[80vh]">
+            <div class="w-full max-w-md p-8 space-y-6 bg-white shadow-2xl rounded-xl">
+                <h2 class="text-2xl font-bold text-center text-gray-900">Panel de Control | Despacho</h2>
+                <div id="login-error" class="hidden p-3 text-sm font-medium text-red-700 bg-red-100 rounded-lg"></div>
+
+                <input type="email" id="email" placeholder="Correo Electrónico" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150">
+                <input type="password" id="password" placeholder="Contraseña" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150">
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
+                    <button id="login-despacho" data-role="despacho" class="login-button py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition duration-150 shadow-lg">Ingresar</button>
+                </div>
+                <p class="text-center text-sm text-gray-500 mt-4">Usa tus credenciales para iniciar.</p>
+            </div>
+        </div>
+
+        <div id="content-views" class="space-y-8" style="display: none;">
+
+            <div id="caja-view" class="user-view" style="display: none;">
+                <h2 class="text-2xl font-semibold mb-6 text-gray-800">CAJA</h2>
+
+                <div class="flex space-x-4 mb-6">
+                    <button id="caja-btn-productos" class="px-6 py-2 rounded-lg font-semibold shadow-md bg-blue-500 text-white hover:bg-blue-600">Productos</button>
+                    <button id="caja-btn-pedidos" class="px-6 py-2 rounded-lg font-semibold shadow-md bg-gray-200 text-gray-800 hover:bg-gray-300">Pedidos</button>
+                </div>
+
+                <div id="caja-section-productos" class="bg-white p-6 rounded-xl shadow-lg mb-8">
+                    <h3 class="text-xl font-bold text-blue-700 mb-4">Productos</h3>
+                    <div class="flex flex-wrap gap-4 mb-4">
+                        <input type="text" id="product-search" placeholder="Buscar productos..." class="flex-grow min-w-[200px] px-4 py-2 border border-gray-300 rounded-lg">
+                        <select id="stock-filter" class="px-4 py-2 border border-gray-300 rounded-lg">
+                            <option value="all">Todos los Productos</option>
+                            <option value="in_stock">Con Stock (> 0)</option>
+                            <option value="out_stock">Sin Stock (= 0)</option>
+                        </select>
+                        <button id="add-product-btn" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition duration-150 shadow-md">Añadir Producto</button>
+                    </div>
+                    <div id="products-list" class="overflow-x-auto">
+                        </div>
+                </div>
+
+                <div id="caja-section-pedidos" class="bg-white p-6 rounded-xl shadow-lg" style="display: none;">
+                    <h3 class="text-xl font-bold text-blue-700 mb-4">Órdenes Pendientes</h3>
+                    <div id="orders-list-caja" class="overflow-x-auto">
+                        </div>
+                </div>
+            </div>
+
+            <div id="despacho-view" class="user-view" style="display: none;">
+                <h2 class="text-2xl font-semibold mb-6 text-gray-800">DESPACHO</h2>
+
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <div id="orders-list-despacho" class="overflow-x-auto">
+                        </div>
+                </div>
+            </div>
+
+            <div id="cartera-view" class="user-view" style="display: none;">
+                <h2 class="text-2xl font-semibold mb-6 text-gray-800">CARTERA</h2>
+
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-xl font-bold text-blue-700 mb-4">Filtros y Exportación</h3>
+                    <div class="flex flex-wrap gap-4 mb-4">
+                        <label class="font-medium text-gray-700">Desde:</label>
+                        <input type="date" id="date-from" class="px-4 py-2 border border-gray-300 rounded-lg">
+                        <label class="font-medium text-gray-700">Hasta:</label>
+                        <input type="date" id="date-to" class="px-4 py-2 border border-gray-300 rounded-lg">
+                        <input type="text" id="cartera-search" placeholder="Buscar por cliente, ID, etc." class="flex-grow min-w-[200px] px-4 py-2 border border-gray-300 rounded-lg">
+                        <button id="apply-cartera-filters" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-150">Aplicar Filtros</button>
+                        <button id="export-cartera-btn" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition duration-150">Exportar a CSV</button>
+                    </div>
+                    <div id="cartera-total" class="text-lg font-bold text-right mb-4 text-gray-700"></div>
+                    <div id="orders-list-cartera" class="overflow-x-auto">
+                        </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 relative">
+                <button id="close-modal" class="absolute top-3 right-3 text-gray-500 hover:text-gray-900 text-2xl font-bold">&times;</button>
+                <h3 id="modal-title" class="text-2xl font-semibold mb-4 text-gray-800 border-b pb-2"></h3>
+                <div id="modal-body" class="max-h-[70vh] overflow-y-auto">
+                    </div>
+                <div id="modal-actions" class="mt-4 pt-4 border-t flex justify-end gap-3">
+                    </div>
+            </div>
+        </div>
+
+        <div id="print-area" class="hidden"></div>
+
+    </div>
+
+  <script src="../../js/admin.js"></script>
+</body>
+</html>
